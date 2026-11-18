@@ -37,6 +37,26 @@ const $ = (sel) => document.querySelector(sel);
 
 const KO_ORIGINALS = new Map();
 
+// Strings that are only ever produced by script (not present as data-i18n in the
+// HTML) need their Korean text here, otherwise the key would leak into the UI.
+const KO = {
+  scanning: "사진을 살펴보는 중…",
+  model_loading: "모델을 불러오는 중… {pct}",
+  model_loading_plain: "모델을 불러오는 중…",
+  model_ready: "모델 준비 완료 · {device} · 사진은 이 기기를 벗어나지 않습니다.",
+  model_error: "모델을 불러오지 못했습니다 ({err}). 아래에서 품목을 직접 고를 수 있습니다.",
+  confidence: "확신도 {pct}%",
+  prep_title: "이렇게 준비하세요",
+  notes_title: "주의",
+  candidates_title: "모델이 본 것",
+  applied_rule: "적용 규칙: {file} · 품목: {item}",
+  uncertain_title: "확신도가 낮아 판정을 보류했습니다",
+  uncertain_body: "사진이 모호합니다. 물건 하나가 화면 가운데 오게 다시 찍거나, 아래에서 품목을 직접 골라 주세요.",
+  food_hint: "액체는 따라 버리고 배출하세요.",
+  disclaimer: "지자체 조례에 따라 다를 수 있습니다. 헷갈리면 주민센터에 문의하세요.",
+  rules_loaded: "{n}개 품목 · {date} 갱신",
+};
+
 const EN = {
   tagline: "Sorting assistant",
   nav_tool: "Sort it",
@@ -77,6 +97,7 @@ const EN = {
   footer_1: "Binwise · MIT License · 2026 Dongjin Kim",
   footer_2: "Photos never leave this browser. Only the model file is fetched from a public CDN, once.",
   scanning: "Looking at the photo…",
+  model_loading_plain: "Loading the model…",
   model_loading: "Loading the model… {pct}%",
   model_ready: "Model ready on {device}. Photos stay on this device.",
   model_error: "Could not load the model ({err}). You can still pick the item manually below.",
@@ -93,7 +114,7 @@ const EN = {
 };
 
 function t(key, vars) {
-  const table = state.lang === "en" ? EN : null;
+  const table = state.lang === "en" ? EN : KO;
   const dict = table || {};
   const fromDict = dict[key];
   let text;
@@ -192,7 +213,7 @@ function renderStatus() {
     setStatus("ok", t("model_ready", { device: state.modelDevice }));
     $("#warmButton")?.setAttribute("hidden", "");
   } else if (state.loading) {
-    setStatus("busy", t("model_loading", { pct: "" }).replace("{pct}", "…"));
+    setStatus("busy", t("model_loading_plain"));
   } else {
     setStatus("", t("model_idle"));
   }
