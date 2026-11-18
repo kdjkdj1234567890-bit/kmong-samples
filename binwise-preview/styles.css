@@ -1,4 +1,6 @@
 /* Binwise — styles */
+[hidden] { display: none !important; }
+
 :root {
   --bg: #0b1220;
   --bg-soft: #111b2e;
