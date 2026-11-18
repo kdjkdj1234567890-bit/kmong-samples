@@ -10,11 +10,12 @@ const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers
 const MODEL_ID = "Xenova/clip-vit-base-patch32";
 const DEFAULT_RULES = "rules/kr.json";
 
-// CLIP's zero-shot head returns a softmax over the prompt set, so a top score of
-// 0.2–0.5 is normal. The floor sits below that band on purpose: it is meant to
-// catch "the photo is a blurry table corner", not to punish a plausible match.
-const CONFIDENCE_FLOOR = 0.18;  // below this the model is guessing
-const CONFIDENCE_MARGIN = 0.05; // top-2 too close -> ask for another photo
+// An item's score is the summed probability of its prompts, so a real match lands
+// around 0.35–0.60 and a photo of something outside the catalogue stays flat near
+// 0.05–0.15. The floor catches the second case; the margin catches a photo that two
+// catalogue items could each explain.
+const CONFIDENCE_FLOOR = 0.25;  // below this the model is guessing
+const CONFIDENCE_MARGIN = 0.08; // top-2 too close -> ask for another photo
 
 const state = {
   lang: localStorage.getItem("binwise.lang") || "ko",
@@ -458,14 +459,18 @@ function verdictNode(item, ranked) {
 function setPreview(url) {
   const wrap = $("#previewWrap");
   const img = $("#preview");
+  const drop = $("#dropZone");
   if (!wrap || !img) return;
   if (!url) {
     wrap.setAttribute("hidden", "");
     img.removeAttribute("src");
+    drop?.removeAttribute("hidden");
     return;
   }
   img.src = url;
   wrap.removeAttribute("hidden");
+  // The photo replaces the empty drop target instead of stacking under it.
+  drop?.setAttribute("hidden", "");
 }
 
 async function handleFile(file) {

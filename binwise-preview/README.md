@@ -23,8 +23,8 @@ upload a photo to somebody's server. Neither survives contact with a kitchen at 
 
 ## What Binwise does
 
-1. **Recognise** — one photo, zero-shot CLIP classification over a catalogue of ~23 common
-   household items, each with several natural-language prompts.
+1. **Recognise** — one photo, zero-shot CLIP classification over a catalogue of 22 common
+   household items, each with several natural-language prompts (82 in total).
 2. **Decide** — the winning item maps to a code in `rules/*.json`, which carries the disposal
    stream, ordered prep steps, and caveats.
 3. **Explain** — the verdict shows the top three candidates with probabilities, the rule file
