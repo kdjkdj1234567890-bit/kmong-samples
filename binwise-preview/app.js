@@ -290,22 +290,25 @@ async function classifyImage(url) {
   const labels = labelMap.map((entry) => entry.label);
   const raw = await state.classifier(url, labels);
 
-  // Keep the best prompt per item, then rank the items.
-  const best = new Map();
+  // Aggregate to an item posterior: an item's score is the probability mass of all
+  // of its prompts. Taking the single best prompt instead would penalise the items
+  // that describe themselves in more ways and reward the terse ones.
+  const totals = new Map();
   for (const row of raw) {
     const mapped = labelMap.find((m) => m.label === row.label);
     if (!mapped) continue;
-    const current = best.get(mapped.itemId);
-    if (!current || row.score > current.score) {
-      best.set(mapped.itemId, { itemId: mapped.itemId, score: row.score, label: row.label });
+    const current = totals.get(mapped.itemId) || { itemId: mapped.itemId, prob: 0, best: 0, label: row.label };
+    current.prob += row.score;
+    if (row.score > current.best) {
+      current.best = row.score;
+      current.label = row.label;
     }
+    totals.set(mapped.itemId, current);
   }
-  const ranked = [...best.values()].sort((a, b) => b.score - a.score);
+  const ranked = [...totals.values()].sort((a, b) => b.prob - a.prob);
 
-  // Keep the model's own probability instead of re-normalising: it is the number
-  // the confidence gate and the reader should both see, without invented inflation.
-  for (const r of ranked) r.prob = r.score;
-
+  // The sum is the probability the image matches that item at all, which is what the
+  // gate and the reader both need; it is not re-normalised again on top.
   return ranked;
 }
 
