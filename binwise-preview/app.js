@@ -198,6 +198,19 @@ function renderRulesMeta() {
 /* Model                                                               */
 /* ------------------------------------------------------------------ */
 
+// `"gpu" in navigator` is true in many browsers where no adapter can be created
+// (software rendering, headless, blocked GPU). Asking for an adapter costs little
+// and keeps a dead WebGPU attempt from poisoning the WASM fallback.
+async function probeWebGPU() {
+  try {
+    if (typeof navigator === "undefined" || !("gpu" in navigator)) return false;
+    const adapter = await navigator.gpu.requestAdapter();
+    return Boolean(adapter);
+  } catch {
+    return false;
+  }
+}
+
 function setStatus(kind, text) {
   const dot = document.querySelector("#modelStatus .dot");
   const span = $("#modelStatusText");
@@ -230,8 +243,9 @@ async function loadModel() {
     env.allowLocalModels = false;
     env.useBrowserCache = true;
 
-    const hasWebGPU = typeof navigator !== "undefined" && "gpu" in navigator;
+    const hasWebGPU = await probeWebGPU();
     const attempts = hasWebGPU ? ["webgpu", "wasm"] : ["wasm"];
+    const errors = [];
 
     for (const device of attempts) {
       try {
@@ -242,10 +256,12 @@ async function loadModel() {
         state.modelDevice = device;
         break;
       } catch (err) {
-        if (device === attempts[attempts.length - 1]) throw err;
-        console.warn(`Binwise: ${device} failed, falling back to wasm`, err);
+        errors.push(`${device}: ${err?.message || err}`);
+        state.classifier = null;
+        console.warn(`Binwise: ${device} failed`, err);
       }
     }
+    if (!state.classifier) throw new Error(errors.join(" / "));
   } catch (err) {
     state.classifier = null;
     state.modelError = err?.message || String(err);
