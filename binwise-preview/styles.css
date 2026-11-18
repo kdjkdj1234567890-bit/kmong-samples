@@ -124,8 +124,11 @@ button, .ghost {
 .drop-title { font-weight: 600; }
 .drop-hint { color: var(--muted); font-size: 0.85rem; }
 
-.preview { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.9rem; }
-.preview img { width: 96px; height: 96px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); }
+.preview { display: flex; align-items: flex-start; gap: 0.8rem; margin-top: 0.4rem; flex-wrap: wrap; }
+.preview img {
+  width: 100%; max-width: 320px; height: 240px; object-fit: contain;
+  background: #fff; border-radius: 12px; border: 1px solid var(--line);
+}
 
 .model-status {
   display: flex; align-items: center; gap: 0.5rem; margin-top: 0.9rem;
